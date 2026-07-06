@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fundamentos de POO e Java — Trabalho de Pesquisa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #1a1b26;
+    --surface: #1f2233;
+    --surface-2: #262a40;
+    --border: #34395a;
+    --text: #c8cee8;
+    --text-dim: #7a81a8;
+    --text-bright: #eef0fb;
+    --amber: #e3af68;
+    --teal: #74d6c9;
+    --blue: #7aa2f7;
+    --red: #f6768f;
+    --green: #9ece6a;
+    --sidebar-w: 300px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    font-size:16px;
+    line-height:1.65;
+  }
+
+  ::selection{ background:var(--amber); color:#1a1b26; }
+
+  code, pre, .mono{ font-family:'JetBrains Mono', monospace; }
+
+  /* ===== Layout shell ===== */
+  .app{
+    display:grid;
+    grid-template-columns: var(--sidebar-w) 1fr;
+    min-height:100vh;
+  }
+
+  /* ===== Sidebar (file explorer) ===== */
+  .sidebar{
+    background:var(--surface);
+    border-right:1px solid var(--border);
+    position:sticky;
+    top:0;
+    height:100vh;
+    overflow-y:auto;
+    padding:0 0 24px 0;
+  }
+  .sidebar__brand{
+    padding:22px 20px 16px 20px;
+    border-bottom:1px solid var(--border);
+  }
+  .sidebar__brand .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:var(--teal);
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .sidebar__brand h1{
+    font-size:17px;
+    color:var(--text-bright);
+    margin:8px 0 2px 0;
+    font-weight:700;
+    line-height:1.3;
+  }
+  .sidebar__brand p{
+    margin:0;
+    font-size:12.5px;
+    color:var(--text-dim);
+  }
+  .filetree{
+    list-style:none;
+    margin:0;
+    padding:10px 0;
+  }
+  .filetree li a{
+    display:flex;
+    gap:10px;
+    align-items:baseline;
+    text-decoration:none;
+    color:var(--text-dim);
+    padding:7px 20px;
+    font-size:13px;
+    font-family:'JetBrains Mono', monospace;
+    border-left:2px solid transparent;
+    transition: color .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .filetree li a .n{
+    color:var(--blue);
+    opacity:.7;
+    min-width:20px;
+  }
+  .filetree li a:hover{
+    color:var(--text-bright);
+    background:var(--surface-2);
+  }
+  .filetree li a.active{
+    color:var(--amber);
+    border-left-color:var(--amber);
+    background:var(--surface-2);
+  }
+  .filetree li a.active .n{ color:var(--amber); opacity:1; }
+
+  /* ===== Mobile nav toggle ===== */
+  .nav-toggle{
+    display:none;
+    position:fixed;
+    z-index:20;
+    top:14px;
+    right:14px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    color:var(--text-bright);
+    font-family:'JetBrains Mono', monospace;
+    padding:9px 12px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+
+  /* ===== Main column ===== */
+  main{ padding: 40px 56px 100px 56px; max-width:920px; }
+
+  .hero{
+    border-bottom:1px solid var(--border);
+    padding-bottom:32px;
+    margin-bottom:40px;
+  }
+  .hero .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    color:var(--teal);
+    font-size:13px;
+    letter-spacing:.05em;
+  }
+  .hero .eyebrow::before{ content:"// "; color:var(--text-dim); }
+  .hero h1{
+    font-size:clamp(28px, 4vw, 42px);
+    color:var(--text-bright);
+    margin:10px 0 14px 0;
+    letter-spacing:-.01em;
+  }
+  .hero p{ color:var(--text-dim); max-width:640px; font-size:15.5px; }
+  .hero .badges{ display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+  .badge{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    color:var(--amber);
+    border:1px solid var(--border);
+    background:var(--surface);
+    padding:5px 10px;
+    border-radius:20px;
+  }
+
+  section.q{
+    padding-top:16px;
+    margin-bottom:56px;
+    scroll-margin-top: 24px;
+  }
+  .q__tab{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-bottom:none;
+    padding:8px 16px;
+    border-radius:8px 8px 0 0;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    color:var(--text-dim);
+  }
+  .q__tab .dot{ width:8px; height:8px; border-radius:50%; background:var(--red); }
+  .q__body{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:0 8px 8px 8px;
+    padding:28px 30px;
+  }
+  .q__title{
+    color:var(--text-bright);
+    font-size:22px;
+    margin:0 0 6px 0;
+    font-family:'JetBrains Mono', monospace;
+  }
+  .q__title .num{ color:var(--amber); }
+  .q__prompt{
+    color:var(--text-dim);
+    font-size:13.5px;
+    font-style:italic;
+    margin:0 0 20px 0;
+    padding-left:12px;
+    border-left:2px solid var(--border);
+  }
+  .q__body h4{
+    color:var(--teal);
+    font-size:14.5px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    margin:22px 0 8px 0;
+  }
+  .q__body p{ margin:0 0 12px 0; font-size:15px;}
+  .q__body ul, .q__body ol{ margin:0 0 14px 0; padding-left:20px; }
+  .q__body li{ margin-bottom:6px; font-size:15px; }
+  .q__body strong{ color:var(--text-bright); }
+
+  /* code blocks */
+  .code-block{
+    background:#14151f;
+    border:1px solid var(--border);
+    border-radius:8px;
+    overflow:hidden;
+    margin:14px 0;
+  }
+  .code-block__bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 14px;
+    background:var(--surface-2);
+    border-bottom:1px solid var(--border);
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    color:var(--text-dim);
+  }
+  .code-block pre{
+    margin:0;
+    padding:16px 18px;
+    overflow-x:auto;
+    font-size:13.5px;
+    line-height:1.6;
+  }
+  .tok-keyword{ color:var(--red); }
+  .tok-string{ color:var(--green); }
+  .tok-comment{ color:var(--text-dim); font-style:italic; }
+
+  /* image slots */
+  .img-slot{
+    margin:16px 0;
+    border-radius:8px;
+    overflow:hidden;
+    border:1px dashed var(--border);
+  }
+  .img-slot img{
+    width:100%;
+    max-height:320px;
+    object-fit:cover;
+    display:block;
+  }
+  .img-fallback{
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:34px 20px;
+    background:var(--surface-2);
+    color:var(--text-dim);
+    text-align:center;
+  }
+  .img-fallback .cam{ font-size:26px; }
+  .img-fallback code{
+    background:var(--bg);
+    border:1px solid var(--border);
+    padding:3px 8px;
+    border-radius:5px;
+    color:var(--amber);
+    font-size:12px;
+  }
+
+  /* solid grid */
+  .solid-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+    margin:14px 0;
+  }
+  .solid-item{
+    border:1px solid var(--border);
+    border-left:3px solid var(--blue);
+    background:var(--surface-2);
+    border-radius:6px;
+    padding:14px 16px;
+  }
+  .solid-item .letter{
+    font-family:'JetBrains Mono', monospace;
+    color:var(--blue);
+    font-weight:700;
+    margin-right:6px;
+  }
+
+  table.attrs{ width:100%; border-collapse:collapse; margin:14px 0; font-size:14px;}
+  table.attrs th, table.attrs td{ border:1px solid var(--border); padding:9px 12px; text-align:left;}
+  table.attrs th{ background:var(--surface-2); color:var(--teal); font-family:'JetBrains Mono', monospace; font-size:12.5px; text-transform:uppercase;}
+
+  .callout{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-left:3px solid var(--amber);
+    padding:14px 16px;
+    border-radius:6px;
+    font-size:14px;
+    color:var(--text);
+    margin:14px 0;
+  }
+  .callout strong{ color:var(--amber); }
+
+  footer{
+    color:var(--text-dim);
+    font-size:12.5px;
+    font-family:'JetBrains Mono', monospace;
+    text-align:center;
+    padding:30px 20px 50px;
+  }
+
+  @media (max-width: 900px){
+    .app{ grid-template-columns: 1fr; }
+    .sidebar{
+      position:fixed;
+      left:0; top:0;
+      width:82vw;
+      max-width:320px;
+      transform:translateX(-100%);
+      transition:transform .25s ease;
+      z-index:15;
+      box-shadow:0 0 40px rgba(0,0,0,.5);
+    }
+    .sidebar.open{ transform:translateX(0); }
+    .nav-toggle{ display:block; }
+    main{ padding:70px 20px 80px 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <button class="nav-toggle" id="navToggle">☰ índice</button>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <span class="tag">// Projeto Paulinho</span>
+      <h1>POO &amp; Java</h1>
+      <p>18 questões · fundamentos de programação</p>
+    </div>
+    <ul class="filetree" id="filetree"></ul>
+  </aside>
+
+  <main>
+    <div class="hero">
+      <span class="eyebrow">Pesquisas feitas</span>
+      <h1>Fundamentos de Programação Orientada a Objetos e Java</h1>
+      <p>Respostas em texto próprio às 18 questões propostas, com exemplos de código e espaços reservados para imagens (basta adicionar os arquivos na pasta <code class="mono">imagens/</code> — veja a nota no rodapé de cada exemplo).</p>
+      <div class="badges">
+        <span class="badge">POO</span>
+        <span class="badge">Java</span>
+        <span class="badge">SOLID</span>
+        <span class="badge">18 questões</span>
+      </div>
+    </div>
+
+    <!-- Q1 -->
+    <section class="q" id="q1">
+      <div class="q__tab"><span class="dot"></span>01_linha_de_comando.md</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">01.</span> Utilizando a Linha de Comando</h3>
+        <p class="q__prompt">Explique o que é a linha de comando e cite pelo menos cinco comandos que podem ser utilizados no Windows ou Linux, explicando para que serve cada um.</p>
+
+        <p>A linha de comando, ou conhecido como: <strong>terminal / prompt de comando</strong> é uma interface de texto onde o usuário digita instruções diretamente para o sistema operacional executar, sem precisar clicar em ícones ou janelas. Ela é mais rápida para tarefas repetitivas, permite automatizar processos com scripts e dá acesso a funções que às vezes nem aparecem na interface gráfica.</p>
+
+        <h4>Comandos comuns</h4>
+        <table class="attrs">
+          <tr><th>Comando</th><th>Sistema</th><th>Para que serve</th></tr>
+          <tr><td><code>cd</code></td><td>Windows / Linux</td><td>Muda o diretório (pasta) atual</td></tr>
+          <tr><td><code>dir</code></td><td>Windows</td><td>Lista os arquivos e pastas do diretório atual</td></tr>
+          <tr><td><code>ls</code></td><td>Linux</td><td>Equivalente ao <code>dir</code>: lista arquivos e pastas</td></tr>
+          <tr><td><code>mkdir</code></td><td>Windows / Linux</td><td>Cria uma nova pasta</td></tr>
+          <tr><td><code>rm</code> / <code>del</code></td><td>Linux / Windows</td><td>Apaga um arquivo</td></tr>
+          <tr><td><code>cls</code> / <code>clear</code></td><td>Windows / Linux</td><td>Limpa a tela do terminal</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Q2 -->
+    <section class="q" id="q2">
+      <div class="q__tab"><span class="dot"></span>02_validacao_de_links.md</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">02.</span> Validação de Links em Aplicações</h3>
+        <p class="q__prompt">O que significa validar um link em uma aplicação? Explique por que essa validação é importante para a segurança e para a experiência do usuário.</p>
+
+        <p>Validar um link significa conferir, antes de usá-lo, se ele tem um formato correto de URL e se aponta para um destino real, seguro e esperado — e não para um endereço malicioso, quebrado ou falso.</p>
+        <h4>Segurança</h4>
+        <p>Sem validação, um sistema pode redirecionar o usuário para sites de phishing, permitir ataques de injeção de código (como XSS) ou abrir links que executam scripts maliciosos escondidos em parâmetros da URL.</p>
+        <h4>Experiência do usuário</h4>
+        <p>Links quebrados (erro 404), redirecionamentos incorretos ou botões que não levam a lugar nenhum frustram o usuário e passam uma sensação de descuido com o sistema. Validar evita esse tipo de falha antes que ela chegue até quem está usando a aplicação.</p>
+      </div>
+    </section>
+
+    <!-- Q3 -->
+    <section class="q" id="q3">
+      <div class="q__tab"><span class="dot"></span>03_paradigma_poo.md</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">03.</span> Entendendo o Paradigma de Orientação a Objetos</h3>
+        <p class="q__prompt">Explique com suas palavras o que é POO e cite duas vantagens desse paradigma em relação ao paradigma procedural.</p>
+
+        <p>Programação Orientada a Objetos é uma forma de organizar o código em que a gente representa partes do sistema como "objetos": pacotes que juntam dados (atributos) e ações (métodos) relacionados a uma mesma entidade do mundo real ou do problema que está sendo resolvido — por exemplo, um objeto <code>Cliente</code> ou um objeto <code>Pedido</code>.</p>
+        <h4>Duas vantagens sobre o paradigma procedural</h4>
+        <ol>
+          <li><strong>Reaproveitamento de código</strong>: com herança, uma classe pode reutilizar o comportamento de outra sem reescrever tudo do zero.</li>
+          <li><strong>Organização e manutenção mais fáceis</strong>: cada objeto cuida dos seus próprios dados, então mudanças em uma parte do sistema tendem a afetar menos outras partes, o que facilita corrigir e evoluir sistemas grandes.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Q4 -->
+    <section class="q" id="q4">
+      <div class="q__tab"><span class="dot"></span>04_funcoes.java</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">04.</span> Funções e Protótipos em Programação</h3>
+        <p class="q__prompt">O que é uma função? Explique sua importância e apresente um exemplo simples.</p>
+
+        <p>Uma função é um bloco de código nomeado que executa uma tarefa específica, podendo receber valores de entrada (parâmetros) e devolver um resultado (retorno). Em vez de repetir a mesma lógica várias vezes no programa, a função permite chamar esse bloco sempre que ele for necessário.</p>
+        <p>Sua importância está em três pontos principais: evita repetição de código, organiza a lógica em partes menores e mais fáceis de entender, e facilita a manutenção — se algo precisa mudar, muda-se em um único lugar.</p>
+        <div class="code-block">
+          <div class="code-block__bar"><span>Somar.java</span><span>java</span></div>
+          <pre><code>public static int somar(int a, int b) {
+    // recebe dois números e devolve a soma
+    return a + b;
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Q5 -->
+    <section class="q" id="q5">
+      <div class="q__tab"><span class="dot"></span>05_classes_heranca.java</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">05.</span> Classes e Herança</h3>
+        <p class="q__prompt">O que é uma classe? O que é um objeto? O que é herança? Dê um exemplo utilizando animais, veículos ou pessoas.</p>
+
+        <ul>
+          <li><strong>Classe</strong>: é o molde/modelo que define quais atributos e métodos os objetos daquele tipo vão ter.</li>
+          <li><strong>Objeto</strong>: é uma instância concreta de uma classe — a classe é a "planta baixa", o objeto é a "casa construída" a partir dela.</li>
+          <li><strong>Herança</strong>: mecanismo em que uma classe (filha) reaproveita atributos e métodos de outra classe (mãe), podendo ainda adicionar ou modificar comportamentos próprios.</li>
+        </ul>
+
+        <div class="img-slot">
+          <img src="imagens/animais-heranca.jpg" alt="Cachorro e gato representando a herança de Animal" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="img-fallback">
+            <span class="cam">📷</span>
+            Coloque aqui a imagem ilustrativa (ex.: cachorro e gato)<br>
+            <code>imagens/animais-heranca.jpg</code>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block__bar"><span>Animal.java</span><span>java</span></div>
+          <pre><code>public class Animal {
+    protected String nome;
+
+    public void emitirSom() {
+        System.out.println("Som genérico de animal");
+    }
+}
+
+public class Cachorro extends Animal {
+    public void emitirSom() {
+        System.out.println("Au au!");
+    }
+}
+
+public class Gato extends Animal {
+    public void emitirSom() {
+        System.out.println("Miau!");
+    }
+}</code></pre>
+        </div>
+        <p>Aqui, <code>Cachorro</code> e <code>Gato</code> herdam o atributo <code>nome</code> de <code>Animal</code>, mas cada um redefine o comportamento de <code>emitirSom()</code>.</p>
+      </div>
+    </section>
+
+    <!-- Q6 -->
+    <section class="q" id="q6">
+      <div class="q__tab"><span class="dot"></span>06_encapsulamento.md</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">06.</span> Encapsulamento</h3>
+        <p class="q__prompt">Explique o conceito de encapsulamento e por que ele é importante no desenvolvimento de sistemas.</p>
+
+        <p>Encapsulamento é o princípio de esconder os detalhes internos de uma classe e controlar o acesso a eles, geralmente deixando os atributos como <code>private</code> e liberando o acesso só por meio de métodos públicos (os famosos <em>getters</em> e <em>setters</em>).</p>
+        <p>Ele é importante porque protege os dados contra alterações indevidas (por exemplo, impedir que a idade de uma pessoa receba um valor negativo), permite mudar a implementação interna de uma classe sem quebrar o restante do sistema, e deixa claro qual é a "porta de entrada" oficial para mexer em cada informação.</p>
+      </div>
+    </section>
+
+    <!-- Q7 -->
+    <section class="q" id="q7">
+      <div class="q__tab"><span class="dot"></span>07_polimorfismo.java</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">07.</span> Polimorfismo</h3>
+        <p class="q__prompt">Explique o que é polimorfismo e apresente um exemplo simples.</p>
+
+        <p>Polimorfismo é a capacidade de objetos de classes diferentes responderem de formas diferentes a uma mesma chamada de método, cada um "do seu jeito", mesmo compartilhando a mesma classe pai ou interface.</p>
+        <div class="code-block">
+          <div class="code-block__bar"><span>Polimorfismo.java</span><span>java</span></div>
+          <pre><code>Animal[] bicho = { new Cachorro(), new Gato() };
+
+for (Animal a : bicho) {
+    a.emitirSom(); // chama o método certo para cada tipo
+}
+// Saída:
+// Au au!
+// Miau!</code></pre>
+        </div>
+        <p>O código chama <code>emitirSom()</code> sem se preocupar se o objeto é um cachorro ou um gato — cada um executa a sua própria versão do método.</p>
+      </div>
+    </section>
+
+    <!-- Q8 -->
+    <section class="q" id="q8">
+      <div class="q__tab"><span class="dot"></span>08_solid.md</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">08.</span> Princípios SOLID</h3>
+        <p class="q__prompt">Pesquise e explique, resumidamente, cada um dos cinco princípios SOLID.</p>
+
+        <div class="solid-grid">
+          <div class="solid-item"><span class="letter">S</span><strong>Single Responsibility Principle</strong> — cada classe deve ter uma única responsabilidade, ou seja, um único motivo para mudar.</div>
+          <div class="solid-item"><span class="letter">O</span><strong>Open/Closed Principle</strong> — as classes devem estar abertas para extensão, mas fechadas para modificação; adiciona-se comportamento novo sem alterar o código existente.</div>
+          <div class="solid-item"><span class="letter">L</span><strong>Liskov Substitution Principle</strong> — uma classe filha deve poder substituir a classe mãe em qualquer parte do sistema sem quebrar o funcionamento.</div>
+          <div class="solid-item"><span class="letter">I</span><strong>Interface Segregation Principle</strong> — é melhor ter várias interfaces pequenas e específicas do que uma única interface grande e genérica que obriga classes a implementar métodos que não usam.</div>
+          <div class="solid-item"><span class="letter">D</span><strong>Dependency Inversion Principle</strong> — o código deve depender de abstrações (interfaces) e não de implementações concretas, facilitando trocar uma peça do sistema sem afetar as outras.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Q9 -->
+    <section class="q" id="q9">
+      <div class="q__tab"><span class="dot"></span>09_primeiro_programa.java</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">09.</span> Primeiro Programa em Java</h3>
+        <p class="q__prompt">Escreva um programa em Java que exiba "Olá, Mundo!" e explique os elementos class, public, static, void e main.</p>
+
+        <div class="code-block">
+          <div class="code-block__bar"><span>Main.java</span><span>java</span></div>
+          <pre><code>public class Main {
+    public static void main(String[] args) {
+        System.out.println("Olá, Mundo!");
+    }
+}</code></pre>
+        </div>
+        <table class="attrs">
+          <tr><th>Elemento</th><th>Função</th></tr>
+          <tr><td><code>class</code></td><td>Declara uma classe, o bloco que organiza o código em Java.</td></tr>
+          <tr><td><code>public</code></td><td>Modificador de acesso que indica que a classe/método pode ser usado por qualquer outra parte do programa.</td></tr>
+          <tr><td><code>static</code></td><td>Indica que o método pertence à própria classe, podendo ser chamado sem precisar criar um objeto dela.</td></tr>
+          <tr><td><code>void</code></td><td>Indica que o método não retorna nenhum valor.</td></tr>
+          <tr><td><code>main</code></td><td>É o método especial que a JVM procura e executa primeiro ao rodar o programa.</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Q10 -->
+    <section class="q" id="q10">
+      <div class="q__tab"><span class="dot"></span>10_catalogo_filmes.md</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">10.</span> Catálogo de Filmes em Java</h3>
+        <p class="q__prompt">Quais informações você armazenaria para cada filme? Cite pelo menos 8 atributos e explique por que escolheu cada um.</p>
+
+        <div class="img-slot">
+          <img src="imagens/capa-filme.jpg" alt="Capa do filme cadastrado" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="img-fallback">
+            <span class="cam">📷</span>
+            Coloque aqui a capa do filme de exemplo<br>
+            <code>imagens/capa-filme.jpg</code>
+          </div>
+        </div>
+
+        <table class="attrs">
+          <tr><th>Atributo</th><th>Por que escolhi</th></tr>
+          <tr><td>título</td><td>Identifica o filme para o usuário e para busca.</td></tr>
+          <tr><td>diretor</td><td>Permite filtrar/agrupar filmes por diretor.</td></tr>
+          <tr><td>anoLançamento</td><td>Útil para ordenar por data e mostrar contexto histórico.</td></tr>
+          <tr><td>gênero</td><td>Ajuda na organização e recomendação de filmes parecidos.</td></tr>
+          <tr><td>duraçãoMinutos</td><td>Informa quanto tempo o filme dura.</td></tr>
+          <tr><td>classificaçãoIndicativa</td><td>Necessária para informar a faixa etária recomendada.</td></tr>
+          <tr><td>sinopse</td><td>Dá contexto sobre a história para quem está navegando no catálogo.</td></tr>
+          <tr><td>notaAvaliação</td><td>Permite ordenar por qualidade/popularidade entre usuários.</td></tr>
+          <tr><td>capaImagem</td><td>Referência ao arquivo de imagem do pôster, usada na interface visual.</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Q11 -->
+    <section class="q" id="q11">
+      <div class="q__tab"><span class="dot"></span>11_controle_fluxo.java</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">11.</span> Controle de Fluxo</h3>
+        <p class="q__prompt">Explique para que servem if, else, switch, for e while. Dê um exemplo de cada.</p>
+
+        <h4>if / else</h4>
+        <p>Executam um bloco de código apenas se uma condição for verdadeira (<code>if</code>) ou um bloco alternativo caso não seja (<code>else</code>).</p>
+        <div class="code-block">
+          <div class="code-block__bar"><span>ifElse.java</span><span>java</span></div>
+          <pre><code>if (idade >= 18) {
+    System.out.println("Maior de idade");
+} else {
+    System.out.println("Menor de idade");
+}</code></pre>
+        </div>
+
+        <h4>switch</h4>
+        <p>Compara uma mesma variável com vários valores possíveis, evitando encadear muitos <code>if/else</code>.</p>
+        <div class="code-block">
+          <div class="code-block__bar"><span>switch.java</span><span>java</span></div>
+          <pre><code>switch (diaDaSemana) {
+    case 1:
+        System.out.println("Domingo");
+        break;
+    case 2:
+        System.out.println("Segunda-feira");
+        break;
+    default:
+        System.out.println("Outro dia");
+}</code></pre>
+        </div>
+
+        <h4>for</h4>
+        <p>Repete um bloco de código um número definido de vezes.</p>
+        <div class="code-block">
+          <div class="code-block__bar"><span>for.java</span><span>java</span></div>
+          <pre><code>for (int i = 0; i < 5; i++) {
+    System.out.println("Contagem: " + i);
+}</code></pre>
+        </div>
+
+        <h4>while</h4>
+        <p>Repete um bloco de código enquanto uma condição continuar verdadeira, sem um número fixo de repetições definido antecipadamente.</p>
+        <div class="code-block">
+          <div class="code-block__bar"><span>while.java</span><span>java</span></div>
+          <pre><code>int senha = -1;
+while (senha != 1234) {
+    senha = lerSenhaDigitada();
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Q12 -->
+    <section class="q" id="q12">
+      <div class="q__tab"><span class="dot"></span>12_consolidacao.md</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">12.</span> Consolidação de Conhecimentos</h3>
+        <p class="q__prompt">Na sua opinião, qual foi o conteúdo mais importante entre todos os pesquisados? Justifique.</p>
+
+        <div class="callout">
+          <strong>Espaço de opinião pessoal.</strong> Deixei um rascunho abaixo — ajuste com sua própria experiência ao estudar o conteúdo.
+        </div>
+        <p>Para mim, o conteúdo mais importante foi o entendimento dos <strong>quatro pilares da Orientação a Objetos</strong> (abstração, encapsulamento, herança e polimorfismo). Isso porque todos os outros temas pesquisados — classes, SOLID, composição, funções — só fazem sentido completo depois que esses pilares são compreendidos. Eles formam a base de raciocínio usada para modelar praticamente qualquer sistema em Java, e entender bem esses conceitos facilita muito o aprendizado de frameworks e boas práticas mais avançadas no futuro.</p>
+      </div>
+    </section>
+
+    <!-- Q13 -->
+    <section class="q" id="q13">
+      <div class="q__tab"><span class="dot"></span>13_paradigma_procedural.md</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">13.</span> Paradigma Procedural</h3>
+        <p class="q__prompt">O que é programação procedural? Quais suas vantagens e limitações?</p>
+
+        <p>Programação procedural é o paradigma em que o código é organizado como uma sequência de instruções e funções (procedimentos) que são executadas em ordem, sem o conceito de objetos combinando dados e comportamento.</p>
+        <h4>Vantagens</h4>
+        <ul>
+          <li>Mais simples de entender para programas pequenos e lineares.</li>
+          <li>Menor overhead de execução, já que não há a estrutura extra de classes e objetos.</li>
+        </ul>
+        <h4>Limitações</h4>
+        <ul>
+          <li>Fica difícil de manter conforme o sistema cresce, pois dados e funções ficam soltos, sem organização em torno de entidades.</li>
+          <li>Menor reaproveitamento de código comparado à herança e ao polimorfismo da POO.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Q14 -->
+    <section class="q" id="q14">
+      <div class="q__tab"><span class="dot"></span>14_pilares_poo.md</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">14.</span> Introdução à Orientação a Objetos</h3>
+        <p class="q__prompt">Pesquise e explique os quatro pilares da POO.</p>
+
+        <ul>
+          <li><strong>Abstração</strong>: focar apenas nas características essenciais de um objeto, escondendo detalhes de implementação que não são relevantes para quem está usando a classe.</li>
+          <li><strong>Encapsulamento</strong>: proteger os dados internos de um objeto, controlando o acesso por meio de métodos públicos.</li>
+          <li><strong>Herança</strong>: permitir que uma classe reaproveite atributos e métodos de outra classe já existente.</li>
+          <li><strong>Polimorfismo</strong>: permitir que um mesmo método se comporte de forma diferente dependendo do objeto que o executa.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Q15 -->
+    <section class="q" id="q15">
+      <div class="q__tab"><span class="dot"></span>15_aluno.java</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">15.</span> Comportamentos dos Objetos</h3>
+        <p class="q__prompt">Diferença entre atributo e método. Crie uma classe Aluno com pelo menos 5 atributos e 5 métodos.</p>
+
+        <p><strong>Atributo</strong> é uma característica ou dado do objeto (o "estado" dele), enquanto <strong>método</strong> é uma ação ou comportamento que o objeto pode executar (o "verbo" dele).</p>
+
+        <div class="code-block">
+          <div class="code-block__bar"><span>Aluno.java</span><span>java</span></div>
+          <pre><code>public class Aluno {
+    // atributos
+    private String nome;
+    private int matricula;
+    private int idade;
+    private String curso;
+    private double[] notas;
+
+    // métodos
+    public void matricular(String curso) {
+        this.curso = curso;
+    }
+
+    public double calcularMedia() {
+        double soma = 0;
+        for (double n : notas) soma += n;
+        return soma / notas.length;
+    }
+
+    public boolean verificarAprovacao() {
+        return calcularMedia() >= 6.0;
+    }
+
+    public void exibirDados() {
+        System.out.println(nome + " - " + curso);
+    }
+
+    public void alterarCurso(String novoCurso) {
+        this.curso = novoCurso;
+    }
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Q16 -->
+    <section class="q" id="q16">
+      <div class="q__tab"><span class="dot"></span>16_composicao.java</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">16.</span> Composição de Objetos</h3>
+        <p class="q__prompt">Explique o que é composição de objetos. Dê um exemplo com Carro e Motor.</p>
+
+        <p>Composição é uma relação do tipo <strong>"tem-um"</strong>, em que uma classe é formada por outra classe como parte da sua estrutura — diferente da herança, que é uma relação "é-um". Aqui, um <code>Carro</code> não é um <code>Motor</code>, mas ele <em>possui</em> um <code>Motor</code>.</p>
+
+        <div class="code-block">
+          <div class="code-block__bar"><span>Carro.java</span><span>java</span></div>
+          <pre><code>public class Motor {
+    private int potenciaCavalos;
+
+    public void ligar() {
+        System.out.println("Motor ligado");
+    }
+}
+
+public class Carro {
+    private Motor motor; // composição: Carro "tem um" Motor
+
+    public Carro() {
+        this.motor = new Motor();
+    }
+
+    public void ligarCarro() {
+        motor.ligar();
+    }
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Q17 -->
+    <section class="q" id="q17">
+      <div class="q__tab"><span class="dot"></span>17_pesquisa_pratica.md</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">17.</span> Pesquisa Prática</h3>
+        <p class="q__prompt">Pesquise uma aplicação real que utilize Java. Nome, onde é utilizada, por que Java foi escolhido.</p>
+
+        <div class="img-slot">
+          <img src="imagens/aplicacao-java.jpg" alt="Aplicação real feita em Java" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="img-fallback">
+            <span class="cam">📷</span>
+            Coloque aqui uma imagem/logo da aplicação pesquisada<br>
+            <code>imagens/aplicacao-java.jpg</code>
+          </div>
+        </div>
+
+        <p><strong>Aplicação:</strong> Minecraft (versão original, "Java Edition").</p>
+        <p><strong>Onde é utilizada:</strong> é um dos jogos mais populares do mundo, jogado em computadores por milhões de pessoas.</p>
+        <p><strong>Por que Java foi escolhido:</strong> Java roda sobre a JVM (Java Virtual Machine), o que permite que o mesmo jogo funcione em Windows, macOS e Linux sem precisar reescrever o código para cada sistema. Além disso, o suporte forte à Orientação a Objetos facilitou organizar um mundo cheio de elementos diferentes (blocos, criaturas, itens) como classes reaproveitáveis, e a grande comunidade de desenvolvedores Java também ajudou a criar todo o ecossistema de mods do jogo.</p>
+        <p class="callout"><strong>Outro exemplo comum:</strong> sistemas bancários e aplicativos Android também usam Java com frequência, principalmente pela robustez, segurança e portabilidade da linguagem.</p>
+      </div>
+    </section>
+
+    <!-- Q18 -->
+    <section class="q" id="q18">
+      <div class="q__tab"><span class="dot"></span>18_reflexao.md</div>
+      <div class="q__body">
+        <h3 class="q__title"><span class="num">18.</span> Questão de Reflexão</h3>
+        <p class="q__prompt">Você acredita que aprender POO é importante para quem deseja trabalhar como desenvolvedor? Justifique.</p>
+
+        <p>Sim. A grande maioria das linguagens e frameworks usados no mercado hoje — Java, C#, Python, PHP, entre outras — é baseada total ou parcialmente em Orientação a Objetos. Entender esse paradigma não serve só para escrever código em Java, mas dá uma base de raciocínio (organizar o problema em entidades, responsabilidades e comportamentos) que se aplica a praticamente qualquer linguagem moderna. Além disso, sistemas profissionais tendem a ser grandes e mantidos por várias pessoas ao longo do tempo, e os conceitos de POO — como encapsulamento e reaproveitamento por herança — são justamente o que torna esse tipo de manutenção viável em equipe.</p>
+      </div>
+    </section>
+
+    <footer>
+      trabalho de pesquisa · fundamentos de poo &amp; java
+    </footer>
+  </main>
+</div>
+
+<script>
+  // ---- Build sidebar file tree from sections ----
+  const filetree = document.getElementById('filetree');
+  const sections = Array.from(document.querySelectorAll('section.q'));
+  const titles = [
+    "Linha de Comando","Validação de Links","Paradigma de POO","Funções e Protótipos",
+    "Classes e Herança","Encapsulamento","Polimorfismo","Princípios SOLID",
+    "Primeiro Programa Java","Catálogo de Filmes","Controle de Fluxo","Consolidação",
+    "Paradigma Procedural","Pilares da POO","Comportamentos dos Objetos","Composição de Objetos",
+    "Pesquisa Prática","Reflexão Final"
+  ];
+  sections.forEach((sec, i) => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = '#' + sec.id;
+    a.innerHTML = '<span class="n">' + String(i+1).padStart(2,'0') + '</span>' + titles[i];
+    li.appendChild(a);
+    filetree.appendChild(li);
+  });
+
+  const links = Array.from(filetree.querySelectorAll('a'));
+
+  // ---- Scrollspy ----
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      }
+    });
+  }, { rootMargin: '-15% 0px -75% 0px' });
+  sections.forEach(sec => observer.observe(sec));
+
+  // ---- Mobile nav toggle ----
+  const sidebar = document.getElementById('sidebar');
+  const navToggle = document.getElementById('navToggle');
+  navToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+  links.forEach(a => a.addEventListener('click', () => sidebar.classList.remove('open')));
+
+  // ---- Tiny Java syntax highlighter ----
+  function highlightJava(code) {
+    code = code
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    code = code.replace(/(\/\/.*$)/gm, '<span class="tok-comment">$1</span>');
+    code = code.replace(/("(?:[^"\\]|\\.)*")/g, '<span class="tok-string">$1</span>');
+
+    const kws = ['public','private','protected','class','static','void','if','else','for','while',
+      'switch','case','break','return','new','int','double','String','boolean','extends','this',
+      'import','package','default','float','char','long','super','null','true','false'];
+    const kwRegex = new RegExp('\\b(' + kws.join('|') + ')\\b(?![^<]*>)', 'g');
+    code = code.replace(kwRegex, '<span class="tok-keyword">$1</span>');
+    return code;
+  }
+  document.querySelectorAll('.code-block pre code').forEach(el => {
+    el.innerHTML = highlightJava(el.textContent);
+  });
+</script>
+</body>
+</html>
